@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>분당 맛집 🍽️ | BUNDANG EATS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Noto Sans KR', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              pink:   '#FF2D78',
+              violet: '#7C3AED',
+              cyan:   '#06B6D4',
+              lime:   '#84CC16',
+              orange: '#F97316',
+              yellow: '#EAB308',
+            }
+          },
+          animation: {
+            'float':    'float 3s ease-in-out infinite',
+            'fadeUp':   'fadeUp 0.5s ease forwards',
+            'shimmer':  'shimmer 2s infinite',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
+          },
+          keyframes: {
+            float:   { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+            fadeUp:  { from: { opacity: '0', transform: 'translateY(24px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+            shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root { scroll-behavior: smooth; }
+    body { background: #0a0a0f; font-family: 'Noto Sans KR', sans-serif; }
+
+    /* noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.3;
+    }
+
+    /* gradient hero blobs */
+    .blob { filter: blur(80px); border-radius: 9999px; position: absolute; }
+
+    /* glass card */
+    .glass {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px) saturate(1.4);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* shimmer skeleton */
+    .shimmer-bg {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+
+    /* custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: #7C3AED; border-radius: 3px; }
+
+    /* filter chip active */
+    .chip-active {
+      background: linear-gradient(135deg, #FF2D78, #7C3AED) !important;
+      color: #fff !important;
+      border-color: transparent !important;
+    }
+
+    /* card hover */
+    .restaurant-card {
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
+    }
+    .restaurant-card:hover {
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 0 24px 48px rgba(124,58,237,0.25);
+    }
+
+    /* tag badge */
+    .tag-badge {
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* search glow */
+    #searchInput:focus {
+      box-shadow: 0 0 0 2px #7C3AED, 0 0 24px rgba(124,58,237,0.3);
+      outline: none;
+    }
+
+    /* star rating */
+    .star-filled { color: #EAB308; }
+    .star-empty  { color: rgba(255,255,255,0.15); }
+
+    /* like button */
+    .like-btn { transition: transform 0.2s; }
+    .like-btn:active { transform: scale(1.4); }
+    .like-btn.liked { animation: pop 0.3s ease; }
+    @keyframes pop {
+      0%  { transform: scale(1); }
+      50% { transform: scale(1.5); }
+      100%{ transform: scale(1); }
+    }
+
+    /* top badge */
+    .top-badge {
+      background: linear-gradient(135deg, #FF2D78, #F97316);
+      font-size: 0.6rem;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    /* scroll fade-in observer */
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body class="relative min-h-screen text-white overflow-x-hidden">
+
+  <!-- ───── HERO ───── -->
+  <section class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4">
+    <!-- blobs -->
+    <div class="blob w-[500px] h-[500px] bg-brand-violet/30 top-[-100px] left-[-150px] animate-pulse-slow"></div>
+    <div class="blob w-[400px] h-[400px] bg-brand-pink/20 bottom-[-80px] right-[-100px] animate-pulse-slow" style="animation-delay:1.5s"></div>
+    <div class="blob w-[300px] h-[300px] bg-brand-cyan/15 top-[30%] right-[10%] animate-pulse-slow" style="animation-delay:0.8s"></div>
+
+    <!-- nav -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass px-6 py-4 flex items-center justify-between">
+      <span class="font-display font-bold text-xl tracking-tight">
+        <span class="bg-gradient-to-r from-brand-pink to-brand-violet bg-clip-text text-transparent">BUNDANG</span>
+        <span class="text-white/60 font-light"> EATS</span>
+      </span>
+      <div class="hidden md:flex gap-6 text-sm text-white/60">
+        <a href="#restaurants" class="hover:text-white transition">맛집 탐색</a>
+        <a href="#map-hint" class="hover:text-white transition">위치</a>
+        <a href="#footer" class="hover:text-white transition">정보</a>
+      </div>
+      <button id="topLikeCount" class="glass px-4 py-1.5 rounded-full text-xs font-semibold text-white/70 flex items-center gap-1.5">
+        ❤️ <span id="totalLikes">0</span> 저장됨
+      </button>
+    </nav>
+
+    <!-- hero content -->
+    <div class="relative z-10 text-center max-w-3xl mx-auto mt-20">
+      <div class="inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-xs text-white/60 mb-6 font-medium">
+        <span class="w-2 h-2 rounded-full bg-brand-lime animate-pulse inline-block"></span>
+        분당구 실시간 인기 맛집 큐레이션
+      </div>
+      <h1 class="font-display font-bold text-6xl md:text-8xl leading-none mb-4">
+        <span class="bg-gradient-to-r from-brand-pink via-brand-violet to-brand-cyan bg-clip-text text-transparent">EAT</span>
+        <br/>
+        <span class="text-white">BUNDANG</span>
+      </h1>
+      <p class="text-white/50 text-base md:text-lg max-w-xl mx-auto leading-relaxed mb-10">
+        성남 분당의 <span class="text-white font-semibold">숨겨진 맛집</span>부터 <span class="text-white font-semibold">핫플레이스</span>까지,<br/>
+        MZ가 엄선한 분당 미식 가이드 🔥
+      </p>
+      <a href="#restaurants"
+         class="inline-flex items-center gap-2 bg-gradient-to-r from-brand-pink to-brand-violet px-8 py-4 rounded-2xl font-bold text-white text-sm hover:opacity-90 transition shadow-lg shadow-brand-violet/30">
+        맛집 탐색하기
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </a>
+    </div>
+
+    <!-- floating emoji -->
+    <div class="absolute bottom-12 left-1/2 -translate-x-1/2 text-3xl animate-float select-none">↓</div>
+  </section>
+
+  <!-- ───── STATS STRIP ───── -->
+  <section class="relative z-10 py-8 px-4">
+    <div class="max-w-5xl mx-auto grid grid-cols-3 gap-4">
+      <div class="glass rounded-2xl p-5 text-center fade-in">
+        <div class="text-3xl font-display font-bold bg-gradient-to-r from-brand-pink to-brand-orange bg-clip-text text-transparent">15+</div>
+        <div class="text-white/40 text-xs mt-1">큐레이션 맛집</div>
+      </div>
+      <div class="glass rounded-2xl p-5 text-center fade-in" style="transition-delay:0.1s">
+        <div class="text-3xl font-display font-bold bg-gradient-to-r from-brand-violet to-brand-cyan bg-clip-text text-transparent">6</div>
+        <div class="text-white/40 text-xs mt-1">카테고리</div>
+      </div>
+      <div class="glass rounded-2xl p-5 text-center fade-in" style="transition-delay:0.2s">
+        <div class="text-3xl font-display font-bold bg-gradient-to-r from-brand-lime to-brand-cyan bg-clip-text text-transparent">100%</div>
+        <div class="text-white/40 text-xs mt-1">직접 검증</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── RESTAURANTS ───── -->
+  <section id="restaurants" class="relative z-10 px-4 pb-24 pt-8 max-w-6xl mx-auto">
+
+    <!-- title -->
+    <div class="mb-8 fade-in">
+      <h2 class="font-display font-bold text-3xl md:text-4xl">
+        분당 <span class="bg-gradient-to-r from-brand-pink to-brand-violet bg-clip-text text-transparent">맛집</span> 탐색
+      </h2>
+      <p class="text-white/40 text-sm mt-1">카테고리 필터 · 검색으로 원하는 맛집을 찾아보세요</p>
+    </div>
+
+    <!-- search -->
+    <div class="relative mb-6 fade-in">
+      <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 111 11a6 6 0 0116 0z"/>
+      </svg>
+      <input id="searchInput" type="text" placeholder="맛집 이름, 메뉴, 분위기 검색..."
+        class="w-full glass rounded-2xl pl-11 pr-4 py-4 text-sm text-white placeholder-white/25 bg-transparent transition" />
+    </div>
+
+    <!-- filter chips -->
+    <div id="filterWrap" class="flex gap-2 flex-wrap mb-8 fade-in">
+      <button data-cat="전체" class="chip chip-active glass px-5 py-2 rounded-full text-xs font-semibold text-white/70 border border-white/10 transition hover:border-white/30">전체</button>
+      <button data-cat="한식" class="chip glass px-5 py-2 rounded-full text-xs font-semibold text-white/70 border border-white/10 transition hover:border-white/30">🍚 한식</button>
+      <button data-cat="카페·디저트" class="chip glass px-5 py-2 rounded-full text-xs font-semibold text-white/70 border border-white/10 transition hover:border-white/30">☕ 카페·디저트</button>
+      <button data-cat="이탈리안" class="chip glass px-5 py-2 rounded-full text-xs font-semibold text-white/70 border border-white/10 transition hover:border-white/30">🍝 이탈리안</button>
+      <button data-cat="일식" class="chip glass px-5 py-2 rounded-full text-xs font-semibold text-white/70 border border-white/10 transition hover:border-white/30">🍣 일식</button>
+      <button data-cat="브런치" class="chip glass px-5 py-2 rounded-full text-xs font-semibold text-white/70 border border-white/10 transition hover:border-white/30">🥞 브런치</button>
+      <button data-cat="술집·바" class="chip glass px-5 py-2 rounded-full text-xs font-semibold text-white/70 border border-white/10 transition hover:border-white/30">🍸 술집·바</button>
+    </div>
+
+    <!-- result count -->
+    <p id="resultCount" class="text-white/30 text-xs mb-4"></p>
+
+    <!-- grid -->
+    <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+    <!-- empty state -->
+    <div id="emptyState" class="hidden py-24 flex flex-col items-center gap-4 text-center">
+      <div class="text-5xl">🍽️</div>
+      <p class="text-white/40 text-sm">검색 결과가 없어요.<br/>다른 키워드로 찾아보세요!</p>
+    </div>
+  </section>
+
+  <!-- ───── MAP HINT ───── -->
+  <section id="map-hint" class="relative z-10 px-4 pb-24 max-w-6xl mx-auto fade-in">
+    <div class="glass rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 overflow-hidden relative">
+      <div class="blob w-64 h-64 bg-brand-violet/20 -top-20 -right-10"></div>
+      <div class="text-6xl md:text-8xl select-none">📍</div>
+      <div>
+        <h3 class="font-display font-bold text-2xl md:text-3xl mb-2">분당 어디에 있나요?</h3>
+        <p class="text-white/50 text-sm leading-relaxed max-w-md">
+          경기도 성남시 분당구 일대의 맛집을 소개합니다.<br/>
+          <span class="text-brand-cyan font-semibold">정자동 카페거리</span>, <span class="text-brand-pink font-semibold">서현 로데오</span>,
+          <span class="text-brand-lime font-semibold">판교 테크노밸리</span> 인근 맛집들을 모두 커버해요.
+        </p>
+        <div class="flex flex-wrap gap-2 mt-4">
+          <span class="glass px-3 py-1 rounded-full text-xs text-white/60">📌 정자동</span>
+          <span class="glass px-3 py-1 rounded-full text-xs text-white/60">📌 서현동</span>
+          <span class="glass px-3 py-1 rounded-full text-xs text-white/60">📌 수내동</span>
+          <span class="glass px-3 py-1 rounded-full text-xs text-white/60">📌 판교</span>
+          <span class="glass px-3 py-1 rounded-full text-xs text-white/60">📌 야탑동</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── FOOTER ───── -->
+  <footer id="footer" class="relative z-10 border-t border-white/5 py-12 px-6 text-center">
+    <div class="font-display font-bold text-2xl mb-2">
+      <span class="bg-gradient-to-r from-brand-pink to-brand-violet bg-clip-text text-transparent">BUNDANG</span>
+      <span class="text-white/30"> EATS</span>
+    </div>
+    <p class="text-white/25 text-xs">© 2025 Bundang Eats · 분당 맛집 큐레이션 · 정보는 방문 전 확인을 권장합니다</p>
+  </footer>
+
+  <!-- ───── LIKE TOAST ───── -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 glass px-5 py-3 rounded-2xl text-sm font-medium opacity-0 pointer-events-none transition-all duration-300 translate-y-4">
+    ❤️ 저장했어요!
+  </div>
+
+  <script>
+    // ─── DATA ───────────────────────────────────────────────────
+    const restaurants = [
+      {
+        id: 1,
+        name: "무진장 칼국수",
+        category: "한식",
+        area: "서현동",
+        rating: 4.8,
+        price: "₩",
+        tags: ["현지인 단골", "줄서는 집"],
+        description: "30년 전통의 손칼국수. 육수 한 모금에 그 이유를 알게 된다. 점심엔 웨이팅 필수.",
+        menu: "바지락칼국수 8,000원",
+        hours: "11:00 – 20:00 (월 휴무)",
+        mood: "레트로",
+        emoji: "🍜",
+        top: true,
+        gradient: "from-amber-500/20 to-orange-600/20",
+        accentColor: "#F97316",
+      },
+      {
+        id: 2,
+        name: "카페 드 로르",
+        category: "카페·디저트",
+        area: "정자동",
+        rating: 4.9,
+        price: "₩₩",
+        tags: ["인스타 감성", "스페셜티"],
+        description: "정자 카페거리의 아이코닉 스팟. 통창 뷰와 스페셜티 커피가 완벽한 조합. 주말엔 포토존 대기.",
+        menu: "시그니처 라떼 7,500원",
+        hours: "09:00 – 22:00",
+        mood: "무드있는",
+        emoji: "☕",
+        top: true,
+        gradient: "from-violet-500/20 to-purple-600/20",
+        accentColor: "#7C3AED",
+      },
+      {
+        id: 3,
+        name: "오마카세 히나",
+        category: "일식",
+        area: "정자동",
+        rating: 4.9,
+        price: "₩₩₩₩",
+        tags: ["오마카세", "데이트코스"],
+        description: "8석 프라이빗 스시 오마카세. 도쿄에서 수련한 셰프의 계절 코스. 한달 전 예약 필수.",
+        menu: "오마카세 코스 150,000원~",
+        hours: "18:00 – 23:00 (일·월 휴무)",
+        mood: "럭셔리",
+        emoji: "🍣",
+        top: false,
+        gradient: "from-cyan-500/20 to-blue-600/20",
+        accentColor: "#06B6D4",
+      },
+      {
+        id: 4,
+        name: "파스타 보나세라",
+        category: "이탈리안",
+        area: "수내동",
+        rating: 4.7,
+        price: "₩₩",
+        tags: ["가성비 좋음", "와인바"],
+        description: "수내동 골목의 숨겨진 보석. 직접 뽑은 생파스타에 자연산 트러플 오일을 넉넉히. 와인 셀렉션도 훌륭.",
+        menu: "까르보나라 18,000원",
+        hours: "12:00 – 22:00",
+        mood: "로맨틱",
+        emoji: "🍝",
+        top: true,
+        gradient: "from-green-500/20 to-emerald-600/20",
+        accentColor: "#84CC16",
+      },
+      {
+        id: 5,
+        name: "브런치 클럽 판교",
+        category: "브런치",
+        area: "판교",
+        rating: 4.6,
+        price: "₩₩",
+        tags: ["샐러드 맛집", "재택러닝"],
+        description: "판교 테크 씬의 성지. 에그 베네딕트와 그린 샐러드 볼이 포만감과 건강을 동시에. 노트북 작업하기도 좋음.",
+        menu: "에그 베네딕트 16,000원",
+        hours: "09:00 – 17:00 (화 휴무)",
+        mood: "캐주얼",
+        emoji: "🥞",
+        top: false,
+        gradient: "from-lime-500/20 to-green-600/20",
+        accentColor: "#84CC16",
+      },
+      {
+        id: 6,
+        name: "삼겹살 공화국",
+        category: "한식",
+        area: "야탑동",
+        rating: 4.5,
+        price: "₩₩",
+        tags: ["직화구이", "회식 맛집"],
+        description: "야탑 직장인들의 치맥·삼겹파티 1번지. 육즙 폭발 국내산 흑돼지 삼겹살. 된장찌개가 별미.",
+        menu: "흑돼지 삼겹살 200g 18,000원",
+        hours: "17:00 – 01:00",
+        mood: "활기찬",
+        emoji: "🥩",
+        top: false,
+        gradient: "from-red-500/20 to-rose-600/20",
+        accentColor: "#FF2D78",
+      },
+      {
+        id: 7,
+        name: "루프탑 바 버티고",
+        category: "술집·바",
+        area: "정자동",
+        rating: 4.8,
+        price: "₩₩₩",
+        tags: ["루프탑", "야경 맛집"],
+        description: "분당 스카이라인이 한눈에. 시그니처 칵테일과 야경의 조합은 어디에도 없다. 일몰 타임 예약 필수.",
+        menu: "시그니처 칵테일 16,000원~",
+        hours: "18:00 – 02:00",
+        mood: "럭셔리",
+        emoji: "🍸",
+        top: true,
+        gradient: "from-pink-500/20 to-fuchsia-600/20",
+        accentColor: "#FF2D78",
+      },
+      {
+        id: 8,
+        name: "도쿄 라멘 방랑자",
+        category: "일식",
+        area: "서현동",
+        rating: 4.7,
+        price: "₩",
+        tags: ["진한 돈코츠", "혼밥 가능"],
+        description: "후쿠오카 돈코츠 라멘의 정수. 18시간 우린 뼈육수에 카에시 소스. 혼자 와도 카운터석이 편안.",
+        menu: "돈코츠 라멘 11,000원",
+        hours: "11:30 – 21:30 (수 휴무)",
+        mood: "아늑한",
+        emoji: "🍜",
+        top: false,
+        gradient: "from-orange-500/20 to-amber-600/20",
+        accentColor: "#F97316",
+      },
+      {
+        id: 9,
+        name: "케이크 연구소",
+        category: "카페·디저트",
+        area: "수내동",
+        rating: 4.9,
+        price: "₩₩",
+        tags: ["주문제작 케이크", "생일 필수"],
+        description: "SNS 바이럴 주인공. 매일 구워내는 시즌 케이크 한 조각이면 하루가 달달해진다. 주말엔 일찍 완판.",
+        menu: "시즌 케이크 한 조각 9,500원",
+        hours: "12:00 – 20:00 (월 휴무)",
+        mood: "감성적",
+        emoji: "🎂",
+        top: true,
+        gradient: "from-pink-500/20 to-rose-400/20",
+        accentColor: "#FF2D78",
+      },
+      {
+        id: 10,
+        name: "솥뚜껑 삼계탕",
+        category: "한식",
+        area: "야탑동",
+        rating: 4.6,
+        price: "₩₩",
+        tags: ["여름 보양식", "전통 맛"],
+        description: "국내산 토종닭 전문. 6시간 달인 백숙 육수에 찹쌀·인삼·밤을 가득. 복날엔 두 시간 줄 각오.",
+        menu: "삼계탕 16,000원",
+        hours: "10:00 – 21:00",
+        mood: "전통적",
+        emoji: "🍲",
+        top: false,
+        gradient: "from-yellow-500/20 to-amber-600/20",
+        accentColor: "#EAB308",
+      },
+      {
+        id: 11,
+        name: "비스트로 노마드",
+        category: "이탈리안",
+        area: "판교",
+        rating: 4.8,
+        price: "₩₩₩",
+        tags: ["모던 이탈리안", "데이트"],
+        description: "판교 최상위 파인캐주얼. 이탈리아 산지 직수입 식재료로 만드는 계절 코스 요리. 내추럴 와인 페어링 추천.",
+        menu: "런치 코스 45,000원",
+        hours: "12:00 – 22:00 (월 휴무)",
+        mood: "세련된",
+        emoji: "🍽️",
+        top: false,
+        gradient: "from-violet-500/20 to-indigo-600/20",
+        accentColor: "#7C3AED",
+      },
+      {
+        id: 12,
+        name: "선셋 하이볼 바",
+        category: "술집·바",
+        area: "수내동",
+        rating: 4.5,
+        price: "₩₩",
+        tags: ["하이볼 특화", "2030 성지"],
+        description: "30여 종의 위스키 하이볼 라인업. 크래프트 안주와 함께 즐기는 MZ 감성 바. 타코야키가 인기.",
+        menu: "하이볼 10,000원~",
+        hours: "17:00 – 02:00",
+        mood: "트렌디",
+        emoji: "🥃",
+        top: false,
+        gradient: "from-amber-500/20 to-yellow-500/20",
+        accentColor: "#EAB308",
+      },
+      {
+        id: 13,
+        name: "모닝 하베스트",
+        category: "브런치",
+        area: "정자동",
+        rating: 4.7,
+        price: "₩₩",
+        tags: ["오가닉", "플랜트베이스"],
+        description: "유기농 식재료만 사용하는 건강 브런치. 아사이볼과 수제 그래놀라가 인생 브런치. 창가 자리 미리 예약하세요.",
+        menu: "아사이볼 14,500원",
+        hours: "08:00 – 15:00",
+        mood: "건강한",
+        emoji: "🥗",
+        top: false,
+        gradient: "from-green-500/20 to-teal-600/20",
+        accentColor: "#84CC16",
+      },
+      {
+        id: 14,
+        name: "하동관 분당점",
+        category: "한식",
+        area: "서현동",
+        rating: 4.4,
+        price: "₩",
+        tags: ["곰탕 원조", "해장 맛집"],
+        description: "서울 하동관의 분당 직영. 소뼈를 12시간 고아낸 뽀얀 곰탕 한 그릇이면 전날 피로가 싹 풀린다.",
+        menu: "곰탕 13,000원",
+        hours: "07:00 – 20:00",
+        mood: "클래식",
+        emoji: "🥣",
+        top: false,
+        gradient: "from-stone-500/20 to-zinc-600/20",
+        accentColor: "#F97316",
+      },
+      {
+        id: 15,
+        name: "치즈 팩토리",
+        category: "브런치",
+        area: "판교",
+        rating: 4.6,
+        price: "₩₩",
+        tags: ["치즈 특화", "사진 맛집"],
+        description: "치즈 러버의 천국. 라끌레트·퐁뒤·치즈 버거까지. 녹아 흐르는 치즈 영상이 SNS에서 매일 viral.",
+        menu: "라끌레트 1인 22,000원",
+        hours: "11:00 – 21:30",
+        mood: "인스타",
+        emoji: "🧀",
+        top: true,
+        gradient: "from-yellow-400/20 to-orange-400/20",
+        accentColor: "#EAB308",
+      },
+    ];
+
+    // ─── STATE ──────────────────────────────────────────────────
+    let activeCategory = "전체";
+    let searchQuery = "";
+    let likes = {};
+
+    // ─── HELPERS ────────────────────────────────────────────────
+    function stars(n) {
+      return Array.from({ length: 5 }, (_, i) =>
+        `<span class="${i < Math.round(n) ? 'star-filled' : 'star-empty'}">★</span>`
+      ).join('');
+    }
+
+    function priceColor(p) {
+      if (p === '₩') return 'text-brand-lime';
+      if (p === '₩₩') return 'text-brand-cyan';
+      if (p === '₩₩₩') return 'text-brand-orange';
+      return 'text-brand-pink';
+    }
+
+    function getFiltered() {
+      return restaurants.filter(r => {
+        const matchCat = activeCategory === "전체" || r.category === activeCategory;
+        const q = searchQuery.toLowerCase();
+        const matchSearch = !q ||
+          r.name.toLowerCase().includes(q) ||
+          r.description.toLowerCase().includes(q) ||
+          r.menu.toLowerCase().includes(q) ||
+          r.tags.some(t => t.toLowerCase().includes(q)) ||
+          r.area.toLowerCase().includes(q) ||
+          r.mood.toLowerCase().includes(q);
+        return matchCat && matchSearch;
+      });
+    }
+
+    function totalLikeCount() {
+      return Object.values(likes).filter(Boolean).length;
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.opacity = '1';
+      t.style.transform = 'translateX(-50%) translateY(0)';
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateX(-50%) translateY(12px)';
+      }, 1800);
+    }
+
+    // ─── RENDER ─────────────────────────────────────────────────
+    function renderGrid() {
+      const filtered = getFiltered();
+      const grid = document.getElementById('grid');
+      const empty = document.getElementById('emptyState');
+      const count = document.getElementById('resultCount');
+
+      count.textContent = `${filtered.length}개의 맛집을 찾았어요`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        empty.classList.add('flex');
+        return;
+      }
+      empty.classList.add('hidden');
+      empty.classList.remove('flex');
+
+      grid.innerHTML = filtered.map(r => `
+        <div class="restaurant-card glass rounded-3xl overflow-hidden fade-in" data-id="${r.id}">
+          <!-- card header -->
+          <div class="relative h-40 bg-gradient-to-br ${r.gradient} flex items-center justify-center overflow-hidden">
+            <div class="blob w-32 h-32 opacity-60" style="background:${r.accentColor}33; top:-10px; right:-10px;"></div>
+            <span class="text-7xl select-none animate-float" style="animation-delay:${Math.random()*2}s">${r.emoji}</span>
+            ${r.top ? `<span class="top-badge absolute top-3 left-3 text-white">TOP PICK</span>` : ''}
+            <!-- like button -->
+            <button onclick="toggleLike(${r.id})"
+              class="like-btn ${likes[r.id] ? 'liked' : ''} absolute top-3 right-3 w-9 h-9 glass rounded-full flex items-center justify-center text-base">
+              ${likes[r.id] ? '❤️' : '🤍'}
+            </button>
+            <!-- area badge -->
+            <span class="absolute bottom-3 right-3 glass px-2.5 py-0.5 rounded-full text-xs text-white/60">📍 ${r.area}</span>
+          </div>
+          <!-- card body -->
+          <div class="p-5">
+            <div class="flex items-start justify-between mb-1">
+              <h3 class="font-bold text-base leading-tight">${r.name}</h3>
+              <span class="${priceColor(r.price)} text-xs font-bold ml-2 mt-0.5">${r.price}</span>
+            </div>
+            <!-- rating -->
+            <div class="flex items-center gap-1.5 mb-3">
+              <span class="text-xs">${stars(r.rating)}</span>
+              <span class="text-white/50 text-xs font-medium">${r.rating}</span>
+              <span class="text-white/20 text-xs">·</span>
+              <span class="text-white/40 text-xs">${r.mood}</span>
+            </div>
+            <!-- tags -->
+            <div class="flex flex-wrap gap-1.5 mb-3">
+              <span class="tag-badge" style="background:${r.accentColor}25;color:${r.accentColor}">${r.category}</span>
+              ${r.tags.map(t => `<span class="tag-badge bg-white/5 text-white/40">${t}</span>`).join('')}
+            </div>
+            <!-- description -->
+            <p class="text-white/50 text-xs leading-relaxed mb-4 line-clamp-2">${r.description}</p>
+            <!-- footer info -->
+            <div class="border-t border-white/5 pt-3 flex flex-col gap-1">
+              <div class="flex items-center gap-2 text-xs text-white/40">
+                <span>🍴</span><span class="text-white/60 font-medium">${r.menu}</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-white/40">
+                <span>🕐</span><span>${r.hours}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // re-observe fade-in
+      document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    }
+
+    // ─── LIKE ────────────────────────────────────────────────────
+    function toggleLike(id) {
+      likes[id] = !likes[id];
+      document.getElementById('totalLikes').textContent = totalLikeCount();
+      showToast(likes[id] ? '❤️ 저장했어요!' : '🤍 저장 취소했어요');
+      renderGrid();
+    }
+
+    // ─── FILTER CHIPS ────────────────────────────────────────────
+    document.getElementById('filterWrap').addEventListener('click', e => {
+      const chip = e.target.closest('[data-cat]');
+      if (!chip) return;
+      activeCategory = chip.dataset.cat;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('chip-active'));
+      chip.classList.add('chip-active');
+      renderGrid();
+    });
+
+    // ─── SEARCH ──────────────────────────────────────────────────
+    document.getElementById('searchInput').addEventListener('input', e => {
+      searchQuery = e.target.value;
+      renderGrid();
+    });
+
+    // ─── INTERSECTION OBSERVER ───────────────────────────────────
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(el => {
+        if (el.isIntersecting) el.target.classList.add('visible');
+      });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // ─── INIT ────────────────────────────────────────────────────
+    renderGrid();
+  </script>
+</body>
+</html>
